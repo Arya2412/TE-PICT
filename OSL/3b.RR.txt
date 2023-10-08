@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define MAX_PROCESSES 10
+
+// Process structure
+struct Process {
+    int pid;
+    int burst_time;
+    int arrival_time;
+    int remaining_time;
+    int waiting_time;
+    int turnaround_time;
+};
+
+// Function to perform Round Robin scheduling
+void roundRobinScheduling(struct Process processes[], int n, int time_quantum) {
+    int current_time = 0;
+    int remaining_processes = n;
+    printf("\nRound Robin Scheduling (Time Quantum: %d):\n", time_quantum);
+    printf("PID\tArrival Time\tBurst Time\tWaiting Time\tTurnaround Time\n");
+    while (remaining_processes > 0) {
+        for (int i = 0; i < n; i++) {
+            struct Process *p = &processes[i];
+            if (p->remaining_time > 0) {
+                int execute_time = p->remaining_time > time_quantum ? time_quantum : p->remaining_time;
+                if (current_time < p->arrival_time) {
+                    current_time = p->arrival_time;
+                }
+                printf("%d\t%d\t\t%d\t\t%d\t\t%d\n", p->pid, p->arrival_time, execute_time,
+                       current_time - p->arrival_time - p->waiting_time,
+                       current_time - p->arrival_time - p->waiting_time + execute_time);
+                p->waiting_time += current_time - p->arrival_time - p->waiting_time;
+                p->remaining_time -= execute_time;
+                current_time += execute_time;
+                if (p->remaining_time <= 0) {
+                    p->turnaround_time = current_time - p->arrival_time;
+                    remaining_processes--;
+                }
+            }
+        }
+    }
+    float average_waiting_time = 0;
+    float average_turnaround_time = 0;
+    for (int i = 0; i < n; i++) {
+        average_waiting_time += processes[i].waiting_time;
+        average_turnaround_time += processes[i].turnaround_time;
+    }
+    average_waiting_time /= n;
+    average_turnaround_time /= n;
+    printf("Average Waiting Time: %.2f\n", average_waiting_time);
+    printf("Average Turnaround Time: %.2f\n", average_turnaround_time);
+}
+
+int main() {
+    int n, time_quantum;
+    struct Process processes[MAX_PROCESSES];
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) {
+        struct Process *p = &processes[i];
+        p->pid = i + 1;
+        printf("Enter arrival time and burst time for process %d: ", p->pid);
+        scanf("%d %d", &p->arrival_time, &p->burst_time);
+        p->remaining_time = p->burst_time;
+        p->waiting_time = 0;
+        p->turnaround_time = 0;
+    }
+    printf("Enter time quantum for Round Robin: ");
+    scanf("%d", &time_quantum);
+    roundRobinScheduling(processes, n, time_quantum);
+    return 0;
+}
