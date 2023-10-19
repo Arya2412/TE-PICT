@@ -6,11 +6,10 @@ struct process
 } p[10];
 
 int n, m;
-
 void input(int[]);
 void display(struct process p[]);
-int isSafestate(int[], int[], struct process p[]);
-int safetyalgorithm(int[], int[], struct process p[]);
+int isSafestate(int[], int[],struct process p[]);
+int safetyalgorithm(int[], int[],struct process p[]);
 
 int main()
 {
@@ -33,84 +32,79 @@ int main()
     {
         printf("Menu :: 1) Find System Safety\t2) Get Safe Sequence\t3) Resource Request\t4) Exit\n");
         printf("Choice :: ");
-        int ch;
-        scanf("%d", &ch);
+        int ch; scanf("%d",&ch);
 
         switch (ch)
         {
-        case 1:
-            if (isSafestate(available, safesequence, p))
-            {
-                printf("\n\tSYSTEM IS IN SAFE STATE...\n\n");
-            }
-            else
-                printf("\nSYSTEM IS IN UNSAFE STATE!!!\n\n");
-            break;
-        case 2:
-            printf("\n");
-            if (isSafestate(available, safesequence, p))
-            {
-                printf("Safe Sequence is :: \t");
-                for (i = 0; i < n; i++)
-                    printf("P%d -> ", safesequence[i]);
-            }
-            printf("\n\n");
-            break;
-        case 3:
-            printf("Enter the Process no. for request :: ");
-            int proc;
-            scanf("%d", &proc);
-
-            //copying the processes
-            struct process pc[10];
-
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < m; j++)
+            case 1:
+                if (isSafestate(available, safesequence,p))
                 {
-                    pc[i].max[j] = p[i].max[j];
-                    pc[i].allocate[j] = p[i].allocate[j];
-                    pc[i].need[j] = p[i].need[j];
+                    printf("\n\tSYSTEM IS IN SAFE STATE...\n\n");
                 }
-            }
-
-            printf("Enter the resource requests :: \n");
-
-            for (int i = 0; i < m; i++)
-            {
-                int tp;
-                scanf("%d", &tp);
-                pc[proc].allocate[i] += tp;
-                pc[proc].need[i] = pc[proc].max[i] - pc[proc].allocate[i];
-            }
-
-            if (isSafestate(available, safesequence, pc))
-            {
-                printf("\tSystem is Safe with given Resource Request !!!");
+                else
+                    printf("\nSYSTEM IS IN UNSAFE STATE!!!\n\n");
+                break;
+            case 2:
                 printf("\n");
-                if (isSafestate(available, safesequence, p))
-                {
+                if (isSafestate(available, safesequence,p))
+                {   
                     printf("Safe Sequence is :: \t");
                     for (i = 0; i < n; i++)
                         printf("P%d -> ", safesequence[i]);
                 }
-                printf("\n\n");
-            }
-            else
-                printf("\tSystem is Not Safe with given Resource Request !!!");
+                printf("\n\n"); 
+                break;
+            case 3: 
+                printf("Enter the Process no. for request :: ");
+                int proc; scanf("%d",&proc);
 
-            printf("\n\n");
-            break;
-        case 4:
-            printf("Exiting ...\n\n");
-            flag = 0;
-            break;
-        default:
-            printf("Invalid Input !!!\n\n");
-            break;
+                //copying the processes 
+                struct process pc[10];
+
+                for(int i = 0; i<n; i++){
+                    for(int j = 0; j<m; j++){
+                        pc[i].max[j] = p[i].max[j];
+                        pc[i].allocate[j] = p[i].allocate[j];
+                        pc[i].need[j] = p[i].need[j];
+                    }
+                }
+
+                printf("Enter the resource requests :: \n");
+
+                for(int i = 0; i<m; i++){
+                    int tp; scanf("%d",&tp);
+                    pc[proc].allocate[i] += tp;
+                    pc[proc].need[i] = pc[proc].max[i] - pc[proc].allocate[i];
+                }
+
+                if (isSafestate(available, safesequence,pc))
+                {
+                    printf("\tSystem is Safe with given Resource Request !!!");
+                    printf("\n");
+                    if (isSafestate(available, safesequence,p))
+                    {   
+                        printf("Safe Sequence is :: \t");
+                        for (i = 0; i < n; i++)
+                            printf("P%d -> ", safesequence[i]);
+                    }
+                    printf("\n\n"); 
+                }
+                else
+                    printf("\tSystem is Not Safe with given Resource Request !!!");
+                
+
+                printf("\n\n");
+                break;
+            case 4:
+                printf("Exiting ...\n\n");
+                flag = 0; 
+                break;
+            default:
+                printf("Invalid Input !!!\n\n");
+                break;
         }
     }
-
+    
     return 0;
 }
 
@@ -127,7 +121,7 @@ void input(int available[m])
         {
             scanf("%d", &p[i].allocate[j]);
         }
-        printf("\tEnter the max resources: ");
+        printf("\tEnter the max resourcess: ");
         for (j = 0; j < m; j++)
         {
             scanf("%d", &p[i].max[j]);
@@ -160,14 +154,14 @@ void display(struct process p[])
     }
 }
 
-int isSafestate(int available[m], int safesequence[n], struct process p[])
+int isSafestate(int available[m], int safesequence[n],struct process p[])
 {
-    if (safetyalgorithm(available, safesequence, p) == 1)
+    if (safetyalgorithm(available, safesequence,p) == 1)
         return 1;
     return 0;
 }
 
-int safetyalgorithm(int available[m], int safesequence[n], struct process p[])
+int safetyalgorithm(int available[m], int safesequence[n],struct process p[])
 {
     int i, j;
 
