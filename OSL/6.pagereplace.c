@@ -1,270 +1,283 @@
-
 #include <stdio.h>
-#include <string.h>
 
-typedef struct {
-    char data[20][2];
-    int end;
-} queue;
+//Prototypes
+void fifo(int frameSize,int ref[],int n);
+void table(int frameSize,int refSize,int hitFlag[],int frame[][refSize]);
+void LRU(int frameSize,int ref[],int n);
+void optimal(int frameSize,int ref[],int n);
 
-void enqueue(queue *q, char data[], int position) {
-    strncpy(q->data[position], data, 2);
-}
+int main(){ 
+    printf("Enter the size of the reference String :: ");
+    int n; scanf("%d",&n);
 
-char* dequeue(queue *q, int position) {
-    return q->data[position];
-}
+    int ref[n];
+    printf("Enter the reference string :: ");
+    for(int i = 0; i<n; i++){
+        scanf("%d",&ref[i]);
+    }
 
-void fifo(char string[], int frameSize, int count, int* pageHits) {
-    int cnt, cnt2, flag, faults = 0;
-    queue q;
-    int firstin = -1;
-    q.end = 0;
-    
-    printf("\nData Requested\tFrame contents\t    Page Fault\n==============================================");
-    
-    for (cnt = 0; cnt < count; cnt += 2) {
-        printf("\n\n\t%c", string[cnt]);
-        flag = 0;
-        
-        for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-            if (string[cnt] == q.data[cnt2][0]) {
-                flag = 1;
+    printf("Enter the frame size :: ");
+    int frameSize; scanf("%d",&frameSize);
+
+    int flag = 1; 
+    while(flag){
+        printf("Menu :: 1) FIFO\t2) LRU\t3) Optimal  4) Exit\nChoice :: ");
+        int ch; scanf("%d",&ch);
+        printf("\n");
+        switch (ch)
+        {
+            case 1:
+                fifo(frameSize,ref,n);
                 break;
-            }
-        }
-        
-        if (flag == 0) {
-            faults++;
-            
-            if (q.end < frameSize) {
-                enqueue(&q, string + cnt, q.end);
-                q.end++;
-            } else {
-                dequeue(&q, firstin);
-                firstin = (firstin + 1) % q.end;
-                enqueue(&q, string + cnt, firstin);
-            }
-            
-            printf("\t  ");
-            
-            for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-                printf("%c   ", q.data[cnt2][0]);
-            }
-            
-            printf("\t\tY");
-        } else {
-            pageHits[0]++;
-            printf("\t  ");
-            
-            for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-                printf("%c   ", q.data[cnt2][0]);
-            }
-            
-            printf("\t\tN");
+            case 2: 
+                LRU(frameSize,ref,n);
+                break;
+            case 3: 
+                optimal(frameSize,ref,n);
+                break;
+            case 4: 
+                flag = 0;
+                printf("\nExiting ...\n");
+                break;
+            default:
+                printf("Invalid Input !!!\n\n");
+            break;
         }
     }
-    
-    printf("\n\n==============================================\n");
-    printf("\nTotal no. of Page Faults: %d\n", faults);
-    printf("Page Hit Ratio: %.2f\n", (float)pageHits[0] / count);
 }
 
-void optimal(char string[], int frameSize, int count, int* pageHits) {
-    int cnt, cnt2, selector, flag, max, faults = 0;
-    int distance[20];
-    queue q;
-    q.end = 0;
-    
-    printf("\nData Requested\tFrame contents\t    Page Fault\n==============================================");
-    
-    for (cnt = 0; cnt < count; cnt += 2) {
-        printf("\n\n\t%c", string[cnt]);
-        flag = 0;
-        
-        for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-            if (string[cnt] == q.data[cnt2][0]) {
-                flag = 1;
+void fifo(int frameSize,int ref[],int n){
+
+    int frame[frameSize][n];
+
+    // Initializing the frame to 0    
+    for(int i = 0; i<frameSize; i++){
+        for(int j = 0; j<n; j++){
+            frame[i][j] = 0;
+        }
+    }
+    // Creating a flag array and initializing to 0
+    // 0 = MISS, 1 = HIT
+    int hitFlag[n];
+    for(int i = 0; i<n; i++){
+        hitFlag[i] = 0;
+    }
+
+    // Logic for FIFO
+    int j = 0;
+    for(int i = 0; i<n; i++){
+        int page = ref[i];
+        j = j%frameSize;
+        // Checking for PAGE FAULT
+        for(int k = 0; k<frameSize; k++){
+            if(i>0) frame[k][i] = frame[k][i-1];
+            if(page == frame[k][i]){
+                hitFlag[i] = 1; 
                 break;
             }
         }
-        
-        if (flag == 0) {
-            faults++;
-            
-            if (q.end < frameSize) {
-                enqueue(&q, string + cnt, q.end);
-                q.data[q.end][1] = cnt;
-                q.end++;
-            } else {
-                for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-                    distance[cnt2] = 0;
-                }
-                
-                for (selector = 0; selector < q.end; selector++) {
-                    for (cnt2 = cnt; cnt2 < count; cnt2 += 2) {
-                        if (string[cnt2] == q.data[selector][0]) {
-                            distance[selector] = cnt2 / 2;
+
+        // if hit else miss
+        if( hitFlag[i] == 0 ){
+            frame[j][i] = page;
+            j++;
+        }
+        else{
+            for (int k = 0; k<frameSize; k++){
+                frame[k][i] = frame[k][i-1];
+            }
+        }
+    }
+
+    table(frameSize,n,hitFlag,frame);
+}
+
+void LRU(int frameSize,int ref[],int n){
+
+    int frame[frameSize][n];
+    // Initializing the frame to 0    
+    for(int i = 0; i<frameSize; i++){
+        for(int j = 0; j<n; j++){
+            frame[i][j] = 0;
+        }
+    }
+    // Creating a flag array and initializing to 0
+    // 0 = MISS, 1 = HIT
+    int hitFlag[n];
+    for(int i = 0; i<n; i++){
+        hitFlag[i] = 0;
+    }
+
+    int cnt = 0; 
+    for(int i = 0; i<n; i++){
+        int page = ref[i];
+        // Checking for PAGE FAULT
+        for(int k = 0; k<frameSize; k++){
+            if(i>0) frame[k][i] = frame[k][i-1];
+            if(page == frame[k][i]){
+                hitFlag[i] = 1; 
+                break;
+            }
+        }
+
+        if(hitFlag[i] == 0){
+            // Miss Case
+            if(cnt < frameSize){
+                frame[cnt][i] = page;
+                cnt++;
+            }
+            else{
+                int f[frameSize];
+                for(int i = 0; i<frameSize; i++) f[i] = 0; 
+   
+                /*storing the indexes of the frame elements to find the farthest element*/
+                for(int k = 0; k<frameSize; k++){
+                    int frameElement = frame[k][i];
+                    for(int j = i-1; j>=0; j--){
+                        if(ref[j] == frameElement){
+                            f[k] = j; 
                             break;
                         }
-                        
-                        if (distance[selector] == 0) {
-                            distance[selector] = 99 - q.data[selector][1];
+                    }
+                }
+
+                //Finding the farthest frame 
+                int miniIndex = 1e9;
+                int fReplace = -1;
+                for(int k = 0; k<frameSize; k++){
+                    if(f[k] < miniIndex){
+                        miniIndex = f[k];
+                        fReplace = k; 
+                    }
+                }
+
+                // frame replaced
+                // printf("%d-F\n",fReplace);
+                frame[fReplace][i] = page;
+            }
+        }
+        else{
+            // Hit Case
+            for (int k = 0; k<frameSize; k++){
+                frame[k][i] = frame[k][i-1];
+            }
+        }
+    }
+    // Print the table
+    table(frameSize,n,hitFlag,frame);
+}
+
+void optimal(int frameSize,int ref[],int n){
+    int frame[frameSize][n];
+    // Initializing the frame to 0    
+    for(int i = 0; i<frameSize; i++){
+        for(int j = 0; j<n; j++){
+            frame[i][j] = 0;
+        }
+    }
+    // Creating a flag array and initializing to 0
+    // 0 = MISS, 1 = HIT
+    int hitFlag[n];
+    for(int i = 0; i<n; i++){
+        hitFlag[i] = 0;
+    }
+
+    int cnt = 0; 
+    for(int i = 0; i<n; i++){
+        int page = ref[i];
+        // Checking for PAGE FAULT
+        for(int k = 0; k<frameSize; k++){
+            if(i>0) frame[k][i] = frame[k][i-1];
+            if(page == frame[k][i]){
+                hitFlag[i] = 1; 
+                break;
+            }
+        }
+
+        if(hitFlag[i] == 0){
+            // Miss Case
+            if(cnt < frameSize){
+                frame[cnt][i] = page;
+                cnt++;
+            }
+            else{
+                int f[frameSize];
+                for(int i = 0; i<frameSize; i++) f[i] = 0; 
+   
+                /*storing the indexes of the frame elements to find the farthest element*/
+                for(int k = 0; k<frameSize; k++){
+                    int frameElement = frame[k][i];
+                    for(int j = i+1; j<n; j++){
+                        if(ref[j] == frameElement){
+                            f[k] = j; 
+                            break;
                         }
                     }
                 }
-                
-                max = 0;
-                
-                for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-                    if (distance[cnt2] > max) {
-                        max = distance[cnt2];
-                        selector = cnt2;
+
+                //Finding the farthest frame 
+                int maxIndex = -1e9;
+                int fReplace = -1;
+                for(int k = 0; k<frameSize; k++){
+                    if(f[k] > maxIndex){
+                        maxIndex = f[k];
+                        fReplace = k; 
                     }
                 }
-                
-                dequeue(&q, selector);
-                enqueue(&q, string + cnt, selector);
-                q.data[selector][1] = cnt;
+
+                // frame replaced
+                // printf("%d-F\n",fReplace);
+                frame[fReplace][i] = page;
             }
-            
-            printf("\t  ");
-            
-            for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-                printf("%c   ", q.data[cnt2][0]);
+        }
+        else{
+            // Hit Case
+            for (int k = 0; k<frameSize; k++){
+                frame[k][i] = frame[k][i-1];
             }
-            
-            printf("\t\tY");
-        } else {
-            pageHits[1]++;
-            printf("\t  ");
-            
-            for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-                printf("%c   ", q.data[cnt2][0]);
-            }
-            
-            printf("\t\tN");
         }
     }
-    
-    printf("\n\n==============================================\n");
-    printf("\nTotal no. of Page Faults: %d\n", faults);
-    printf("Page Hit Ratio: %.2f\n", (float)pageHits[1] / count);
+    // Print the table
+    table(frameSize,n,hitFlag,frame);
 }
 
-void lru(char string[], int frameSize, int count, int* pageHits) {
-    int cnt, cnt2, selector, flag, min, faults = 0;
-    queue q;
-    q.end = 0;
-    
-    printf("\nData Requested\tFrame contents\t    Page Fault\n==============================================");
-    
-    for (cnt = 0; cnt < count; cnt += 2) {
-        printf("\n\n\t%c", string[cnt]);
-        flag = 0;
-        
-        for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-            if (string[cnt] == q.data[cnt2][0]) {
-                q.data[cnt2][1] = (cnt / 2) + 1;
-                flag = 1;
-                break;
-            }
-        }
-        
-        if (flag == 0) {
-            faults++;
-            
-            if (q.end < frameSize) {
-                enqueue(&q, string + cnt, q.end);
-                q.data[q.end][1] = (cnt / 2) + 1;
-                q.end++;
-            } else {
-                min = 99;
-                
-                for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-                    if (q.data[cnt2][1] < min) {
-                        min = q.data[cnt2][1];
-                        selector = cnt2;
-                    }
-                }
-                
-                dequeue(&q, selector);
-                enqueue(&q, string + cnt, selector);
-                q.data[selector][1] = (cnt / 2) + 1;
-            }
-            
-            printf("\t  ");
-            
-            for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-                printf("%c   ", q.data[cnt2][0]);
-            }
-            
-            printf("\t\tY");
-        } else {
-            pageHits[2]++;
-            printf("\t  ");
-            
-            for (cnt2 = 0; cnt2 < q.end; cnt2++) {
-                printf("%c   ", q.data[cnt2][0]);
-            }
-            
-            printf("\t\tN");
-        }
+void table(int frameSize,int refSize, int hitFlag[],int frame[][refSize]){
+
+    int hitCnt = 0; 
+    int missCnt = 0; 
+
+    for (int i = 0; i < refSize; i++){
+        printf("-------");
     }
-    
-    printf("\n\n==============================================\n");
-    printf("\nTotal no. of Page Faults: %d\n", faults);
-    printf("Page Hit Ratio: %.2f\n", (float)pageHits[2] / count);
-}
-
-int main() {
-    int frameSize, count, ch;
-    char string[51];
-    int pageHits[3] = {0, 0, 0}; // 0: FIFO, 1: Optimal, 2: LRU
-    
-    printf("Enter the string: ");
-    count = 0;
-    
-    do {
-        scanf("%c", &string[count]);
-        count++;
-    } while (string[count - 1] != '\n');
-    
-    count--;
-    
-    printf("\nEnter the size of the frame: ");
-    scanf("%d", &frameSize);
-    
-    do {
-        printf("\nMENU\n====\n1.FIFO\n2.Least Recently Used (LRU)\n3.Optimal\n4.Exit\n\nYour Choice:");
-        scanf("%d", &ch);
-        
-        switch (ch) {
-            case 1:
-                fifo(string, frameSize, count, pageHits);
-                break;
-                
-            case 2:
-                lru(string, frameSize, count, pageHits);
-                break;
-                
-            case 3:
-                optimal(string, frameSize, count, pageHits);
-                break;
-                
-            case 4:
-                // exit(0);
-                break;
-                
-            default:
-                printf("\nInvalid choice! Please try again!");
-                continue;
+    printf("\n|");
+    for(int i = 0; i<refSize; i++){
+        if(hitFlag[i]){
+            printf(" HIT  |");
+            hitCnt++;
         }
-    } while (ch != 4);
-    
-    printf("\nOverall Page Hit Ratio for FIFO: %.2f\n", (float)pageHits[0] / count);
-    printf("Overall Page Hit Ratio for Optimal: %.2f\n", (float)pageHits[1] / count);
-    printf("Overall Page Hit Ratio for LRU: %.2f\n", (float)pageHits[2] / count);
-    
-    return 0;
+        else{
+            printf(" MISS |");
+            missCnt++;
+        } 
+    }
+    printf("\n");
+    for (int i = 0; i < refSize; i++){
+        printf("-------");
+    }
+    printf("\n");
+
+    for(int j = 0; j<frameSize; j++){
+        printf("|");
+        for(int i = 0; i<refSize; i++){
+            printf("   %d  |",frame[j][i]);
+        }
+        printf("\n");
+    }
+
+    for (int i = 0; i < refSize; i++){
+        printf("-------");
+    }
+    printf("\n\n");
+    printf("Hit  Percent :: %0.2f\n", (float) hitCnt/refSize * 100);
+    printf("Miss Percent :: %0.2f\n\n", (float) missCnt/refSize * 100);
 }
