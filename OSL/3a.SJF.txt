@@ -1,102 +1,102 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <queue>
+
+using namespace std;
 
 struct Process {
-    int pid; // Process ID
-    int burst_time; // Burst Time
-    int arrival_time; // Arrival Time
+    int id;
+    int arrival_time;
+    int burst_time;
+    int remaining_time;
+    int completion_time;
+    int start_time;
+    int turnaround_time;
+    int waiting_time;
 };
 
-// Function to find the waiting time for all processes
-void calculateWaitingTime(struct Process processes[], int n, int waiting_time[]) {
-    int remaining_time[n];
-    // Copy the burst time into remaining_time[]
-    for (int i = 0; i < n; i++)
-        remaining_time[i] = processes[i].burst_time;
-    int completed = 0, current_time = 0, min_remaining_time = INT_MAX;
-    int shortest_process = 0, finish_time;
-    int found = 0;
-    // Continue until all processes are completed
-    while (completed != n) {
-        // Find the process with the minimum remaining time
-        for (int j = 0; j < n; j++) {
-            if ((processes[j].arrival_time <= current_time) &&
-                (remaining_time[j] < min_remaining_time) && remaining_time[j] > 0) {
-                min_remaining_time = remaining_time[j];
-                shortest_process = j;
-                found = 1;
-            }
-        }
-        if (found == 0) {
-            current_time++;
-            continue;
-        }
-        // Reduce the remaining time by one
-        remaining_time[shortest_process]--;
-        // Update the minimum remaining time
-        min_remaining_time = remaining_time[shortest_process];
-        if (min_remaining_time == 0)
-            min_remaining_time = INT_MAX;
-        // If a process is completed
-        if (remaining_time[shortest_process] == 0) {
-            // Increment the completed count
-            completed++;
-            found = 0;
-            // Find the finish time of the current process
-            finish_time = current_time + 1;
-            // Calculate the waiting time
-            waiting_time[shortest_process] = finish_time - processes[shortest_process].burst_time - processes[shortest_process].arrival_time;
-            if (waiting_time[shortest_process] < 0)
-                waiting_time[shortest_process] = 0;
-        }
-        // Increment the current time
-        current_time++;
+struct CompareArrivalTime {
+    bool operator()(const Process& p1, const Process& p2) {
+        return p1.arrival_time > p2.arrival_time;
     }
-}
-
-// Function to calculate the turnaround time
-void calculateTurnaroundTime(struct Process processes[], int n, int waiting_time[], int turnaround_time[]) {
-    // Calculating turnaround time by adding burst_time and waiting_time
-    for (int i = 0; i < n; i++)
-        turnaround_time[i] = processes[i].burst_time + waiting_time[i];
-}
-
-
-
-// Function to calculate average times
-void calculateAverageTime(struct Process processes[], int n) {
-    int waiting_time[n], turnaround_time[n];
-    float total_waiting_time = 0, total_turnaround_time = 0;
-    // Calculate waiting time for all processes
-    calculateWaitingTime(processes, n, waiting_time);
-    // Calculate turnaround time for all processes
-    calculateTurnaroundTime(processes, n, waiting_time, turnaround_time);
-    // Display processes along with all details
-    printf("P\tBT\tWT\tTAT\n");
-    // Calculate total waiting time and total turnaround time
-    float total_wt = 0, total_tat = 0;
-    for (int i = 0; i < n; i++) {
-        total_wt += waiting_time[i];
-        total_tat += turnaround_time[i];
-        printf("%d\t%d\t%d\t%d\n", processes[i].pid, processes[i].burst_time, waiting_time[i], turnaround_time[i]);
-    }
-    // Calculate and display average waiting time and average turnaround time
-    printf("\nAverage waiting time = %.2f\n", total_wt / n);
-    printf("Average turnaround time = %.2f\n", total_tat / n);
- 
-}
+};
 
 int main() {
     int n;
-    printf("Enter the number of processes: ");
-    scanf("%d", &n);
-    struct Process processes[n];
+    cout << "Enter the number of processes: ";
+    cin >> n;
+    vector<Process> processes(n);
+
     for (int i = 0; i < n; i++) {
-        processes[i].pid = i + 1;
-        printf("Enter arrival time and burst time for process %d: ", processes[i].pid);
-        scanf("%d %d", &processes[i].arrival_time, &processes[i].burst_time);
+        processes[i].id = i + 1;
+        cout << "Enter arrival time for process P" << i + 1 << ": ";
+        cin >> processes[i].arrival_time;
+        cout << "Enter burst time for process P" << i + 1 << ": ";
+        cin >> processes[i].burst_time;
+        processes[i].remaining_time = processes[i].burst_time;
+        processes[i].completion_time = 0;
+        processes[i].start_time = -1;
     }
-    calculateAverageTime(processes, n);
+
+    int currentTime = 0;
+    int completed = 0;
+    vector<int> executionOrder;
+    priority_queue<Process, vector<Process>, CompareArrivalTime> readyQueue;
+
+    while (completed < n) {
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= currentTime && processes[i].remaining_time > 0) {
+                readyQueue.push(processes[i]);
+            }
+        }
+
+        if (!readyQueue.empty()) {
+            Process shortestJob = readyQueue.top();
+            readyQueue.pop();
+
+            int shortestIndex = shortestJob.id - 1;
+            if (processes[shortestIndex].start_time == -1) {
+                processes[shortestIndex].start_time = currentTime;
+            }
+
+            processes[shortestIndex].remaining_time--;
+            currentTime++;
+
+            if (processes[shortestIndex].remaining_time == 0) {
+                completed++;
+                int completionTime = currentTime;
+                processes[shortestIndex].completion_time = completionTime;
+                executionOrder.push_back(shortestIndex);
+            }
+        } else {
+            currentTime++;
+        }
+    }
+
+    cout << "Execution Gantt Chart:" << endl;
+    int prevCompletionTime = 0;
+    for (int i = 0; i < executionOrder.size(); i++) {
+        int index = executionOrder[i];
+        cout << "P" << processes[index].id << " | ";
+        prevCompletionTime = processes[index].completion_time;
+    }
+    cout << endl;
+
+    float totalTurnaroundTime = 0;
+    float totalWaitingTime = 0;
+    for (int i = 0; i < n; i++) {
+        processes[i].turnaround_time = processes[i].completion_time - processes[i].arrival_time;
+        processes[i].waiting_time = processes[i].turnaround_time - processes[i].burst_time;
+        totalTurnaroundTime += processes[i].turnaround_time;
+        totalWaitingTime += processes[i].waiting_time;
+    }
+
+    float averageTurnaroundTime = totalTurnaroundTime / n;
+    float averageWaitingTime = totalWaitingTime / n;
+
+    cout << "Average Turnaround Time: " << averageTurnaroundTime << endl;
+    cout << "Average Waiting Time: " << averageWaitingTime << endl;
+
     return 0;
 }
