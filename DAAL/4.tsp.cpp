@@ -129,3 +129,19 @@ int main() {
     return 0;
 }
 
+
+
+
+// Enter the adjacency matrix (5x5):
+// INF 20 30 10 11
+// 15 INF 16 4 2
+// 3 5 INF 2 4
+// 19 6 18 INF 3
+// 16 4 7 16 INF
+
+// Optimal Path:
+// 1 -> 4
+// 4 -> 2
+// 2 -> 5
+// 5 -> 3
+// Optimal Cost: 16
