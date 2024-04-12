@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "shubhampitale",
+      "email": "shubhampitale45@gmail.com",
+      "password": "shubham123"
+    },
+    {
+      "username": "janhvi",
+      "email": "janhvi@gmail.com",
+      "password": "janhvi123",
+      "id": 2
+    },
+    {
+      "username": "shubhampitale",
+      "email": "shubhampitale45@gmail.com",
+      "password": "shubham123",
+      "id": 3
+    },
+    {
+      "username": "shubhamsukum",
+      "email": "g@gmail.com",
+      "password": "pass",
+      "id": 4
+    }
+  ]
+}

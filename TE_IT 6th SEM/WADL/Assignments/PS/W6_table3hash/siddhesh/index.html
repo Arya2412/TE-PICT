@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        table{
+            width: 50vw;
+        }
+        table, th, td{
+            border: 2px solid grey;
+            border-spacing: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <form onsubmit="formSubmit(event)">
+            <label for="table1_input">Table 1</label>
+            <input id="table1_input" type="text" />
+            <br>
+            <label for="table2_input">Table 2</label>
+            <input id="table2_input" type="text" />
+            <br>
+            <button type="submit">Submit</button>
+        </form>
+
+        
+        <table id="table1">
+
+        </table>
+        <br><br>
+        <table id="table2">
+
+        </table>
+        <br><br>
+        <table id="table3">
+
+        </table>
+        <br><br>
+    </div>
+
+
+    <script>
+        function createTable(input){
+            const row = parseInt(input[0]);
+            const column = parseInt(input[1]);
+            let start = parseInt(input[2]);
+
+            let table = [];
+            for(let crow = 0; crow < row; crow++){
+                table.push([]);
+                for(let ccol = 0; ccol < column; ccol++)
+                {
+                    table[crow].push(0);
+                }
+            }
+
+            for(let ccol = 0; ccol < column; ccol++){
+                table[0][ccol] = start++;
+            }
+
+            for(let crow = 1; crow < row; crow++){
+                for(let ccol = 0; ccol < column; ccol++){
+                    table[crow][ccol] = table[crow -1][ccol] + table[0][ccol];
+                }
+            }
+
+            return table;
+        }
+
+        function multiplyTable(table1, table2, resultTable){
+            for(let crow = 0; crow < table1.length; crow++)
+            {
+                for(let ccol = 0; ccol < table1[0].length; ccol++)
+                {
+                    resultTable[crow][ccol] = table1[crow][ccol] * table2[crow][ccol];
+                }
+            }
+        }
+
+        function displayTable(table, id){
+            let html = "";
+            for(let crow = 0; crow < table.length; crow++)
+            {
+                html += "<tr>"
+                for(let ccol = 0; ccol < table[0].length; ccol++)
+                {
+                    html += "<td>" + table[crow][ccol] + "</td>";
+                }
+                html += "</tr>";
+            }
+            document.getElementById(id).innerHTML = html;
+        }
+
+        function formSubmit(e){
+            e.preventDefault();
+            const table1 = document.getElementById("table1");
+            const table2 = document.getElementById("table2");
+            const table1Value = document.getElementById("table1_input").value;
+            const table2Value = document.getElementById("table2_input").value;
+            const input1 = table1Value.split("#");
+            const input2 = table2Value.split("#");
+
+            let table1Data = createTable(input1);
+            let table2Data = createTable(input2);
+            displayTable(table1Data, "table1");
+            displayTable(table2Data, "table2");
+
+            if(input1[0] === input2[0] && input1[1] === input2[1])
+            {
+                // same row and column
+                let table3Data = createTable(input1);
+    
+                if(table1Data[0][0] !== table2Data[0][0]){
+                    multiplyTable(table1Data, table2Data, table3Data);
+                }
+                
+                displayTable(table3Data, "table3");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<h2>Dashboard</h2>
+<div *ngIf="details">
+  <p>Username: {{ details.username }}</p>
+  <p>Email: {{ details.email }}</p>
+</div>
+<div *ngIf="!details">
+  <p>Invalid</p>
+</div>
+<button (click)="logout()">Logout</button>
