@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+
+    <style>
+        #imageContainer {
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #swipeImage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-radius: 50%; /* Make the image circular */
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .button-container a {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px 20px;
+            background-color: #007bff; /* Button Background Color */
+            color: #ffffff; /* Button Text Color */
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-container a:hover {
+            background-color: #0056b3; /* Hover Background Color */
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var image = document.getElementById('swipeImage');
+            var mc = new Hammer(image);
+
+            mc.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+
+            mc.on('panleft panright panup pandown', function (ev) {
+                var deltaX = ev.deltaX;
+                var deltaY = ev.deltaY;
+
+                switch (ev.type) {
+                    case 'panleft':
+                        image.style.left = parseInt(image.style.left || 0) - 10 + 'px';
+                        break;
+                    case 'panright':
+                        image.style.left = parseInt(image.style.left || 0) + 10 + 'px';
+                        break;
+                    case 'panup':
+                        image.style.top = parseInt(image.style.top || 0) - 10 + 'px';
+                        break;
+                    case 'pandown':
+                        image.style.top = parseInt(image.style.top || 0) + 10 + 'px';
+                        break;
+                }
+            });
+
+            $("#leftButton").on("click", function () {
+                image.style.left = parseInt(image.style.left || 0) - 10 + 'px';
+            });
+
+            $("#rightButton").on("click", function () {
+                image.style.left = parseInt(image.style.left || 0) + 10 + 'px';
+            });
+
+            $("#upButton").on("click", function () {
+                image.style.top = parseInt(image.style.top || 0) - 10 + 'px';
+            });
+
+            $("#downButton").on("click", function () {
+                image.style.top = parseInt(image.style.top || 0) + 10 + 'px';
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <h1>Image Swiping</h1>
+
+    <div id="imageContainer">
+        <img src="https://imgs.search.brave.com/05g6J4HHqFX83T8OXmc--CjKXdgbWjaHlsUyRT37-Ck/rs:fit:860:0:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzL2E0LzEy/L2IwL2E0MTJiMDM2/ZDdjMmVkNzdhMTcx/NDQ1MDdhMjg1Njk4/LmpwZw" id="swipeImage" alt="Image">
+    </div>
+
+    <div class="button-container">
+        <a href="#" class="ui-btn ui-btn-inline" id="leftButton">Left</a>
+        <a href="#" class="ui-btn ui-btn-inline" id="rightButton">Right</a>
+        <a href="#" class="ui-btn ui-btn-inline" id="upButton">Up</a>
+        <a href="#" class="ui-btn ui-btn-inline" id="downButton">Down</a>
+    </div>
+</body>
+
+</html>
